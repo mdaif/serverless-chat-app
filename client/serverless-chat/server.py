@@ -76,7 +76,9 @@ def callback_handling(*args, **kwargs):
     auth0.authorize_access_token()
     resp = auth0.get('userinfo')
     userinfo = resp.json()
-
+    print("#" * 20 + "ID TOKEN" + "#" * 20)
+    print(auth0.token['id_token'])
+    print("#" * 48)
     session[constants.JWT_PAYLOAD] = userinfo
     session[constants.PROFILE_KEY] = {
         'user_id': userinfo['sub'],
