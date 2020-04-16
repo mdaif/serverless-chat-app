@@ -5,7 +5,7 @@ service: serverless-chat-app
 
 plugins:
   - serverless-webpack
-  
+
 provider:
   name: aws
   runtime: nodejs12.x
@@ -36,6 +36,17 @@ functions:
       - websocket:
           route: $disconnect
 
+  BroadcastHandler:
+    environment:
+      STAGE: ${self:provider.stage}
+      REGION: ${self:provider.region}
+      API_ID:
+        Ref: WebsocketsApi
+    handler: src/websocket/broadcast.handler
+    events:
+      - websocket:
+          route: $default
+          
 resources:
   Resources:
     WebSocketConnectionsDynamoDBTable:

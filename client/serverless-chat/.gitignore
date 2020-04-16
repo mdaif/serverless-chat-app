@@ -1,0 +1,6 @@
+.env
+client/serverless-chat/venv/
+.pyc
+*.iml
+.directory
+.idea
