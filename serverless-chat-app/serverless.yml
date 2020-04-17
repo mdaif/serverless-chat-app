@@ -24,14 +24,15 @@ provider:
     CONNECTIONS_TABLE: Chat-WS-Connections-${self:provider.stage}
 
 functions:
+    
   ConnectHandler:
-      handler: src/websocket/connect.handler
+      handler: src/lambda/websocket/connect.handler
       events:
         - websocket:
             route: $connect
 
   DisconnectHandler:
-    handler: src/websocket/disconnect.handler
+    handler: src/lambda/websocket/disconnect.handler
     events:
       - websocket:
           route: $disconnect
@@ -42,7 +43,7 @@ functions:
       REGION: ${self:provider.region}
       API_ID:
         Ref: WebsocketsApi
-    handler: src/websocket/broadcast.handler
+    handler: src/lambda/websocket/broadcast.handler
     events:
       - websocket:
           route: $default

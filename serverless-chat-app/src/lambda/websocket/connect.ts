@@ -1,6 +1,8 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
+import { verifyToken } from '../utils'
+import { JwtPayload } from '../../auth/JwtPayload'
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 
@@ -10,6 +12,26 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   console.log('Websocket connect', event)
 
   const connectionId = event.requestContext.connectionId
+  let tokenPayload: JwtPayload
+
+  try {
+    tokenPayload = await verifyToken(event)
+  } catch(err) {
+    console.log('Could not authenticate request: ', err)
+    return {
+      statusCode: 401,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        'error': err
+      })
+    }
+  }
+  const userId = tokenPayload.sub
+  
+  console.log('connection from userId: ', userId)
   const timestamp = new Date().toISOString()
 
   const item = {
