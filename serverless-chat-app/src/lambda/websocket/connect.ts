@@ -36,7 +36,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   const item = {
     id: connectionId,
-    timestamp
+    userId: tokenPayload.sub,
+    userName: tokenPayload.name,
+    timestamp,
   }
 
   console.log('Storing item: ', item)

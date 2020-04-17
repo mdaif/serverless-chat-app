@@ -5,6 +5,7 @@ import * as AWS from 'aws-sdk'
 const docClient = new AWS.DynamoDB.DocumentClient()
 
 const connectionsTable = process.env.CONNECTIONS_TABLE
+const chatHistoryTable = process.env.CHAT_HISTORY_TABLE
 const stage = process.env.STAGE
 const apiId = process.env.API_ID
 const region = process.env.REGION
@@ -19,6 +20,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     console.log('Websocket connect', event)
 
     const senderConnectionId = event.requestContext.connectionId
+    const userInfo = await getUserInfo(senderConnectionId)
     const message = event.body
     console.log('Getting all connections for connection: ', senderConnectionId)
 
@@ -28,7 +30,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
     for (const connection of connections.Items) {
         const receiverConnectionId = connection.id
-        await sendMessageToClient(senderConnectionId, message, receiverConnectionId)
+        await sendMessageToClient(userInfo.userName, message, receiverConnectionId)
+        await saveMessageToChatLog(userInfo, message)
     }
     return {
         statusCode: 200,
@@ -36,12 +39,11 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     }
 }
 
-async function sendMessageToClient(
-    senderConnectionId: string, message: string, receiverConnectionId: string) {
+async function sendMessageToClient(userName: string, message: string, receiverConnectionId: string) {
     try {
         console.log('Sending message to a connection', receiverConnectionId)
         const payload = {
-            'message': `${senderConnectionId} says: ${message}`
+            'message': `${userName} says: ${message}`
         }
         await apiGateway.postToConnection({
             ConnectionId: receiverConnectionId,
@@ -58,7 +60,32 @@ async function sendMessageToClient(
                     id: receiverConnectionId
                 }
             }).promise()
-
         }
     }
+}
+
+async function getUserInfo(senderConnectionId: string) {
+    console.log('Getting user info for connection ', senderConnectionId)
+    const userInfo = await docClient.query({
+        TableName: connectionsTable,
+        KeyConditionExpression: 'id = :senderConnectionId',
+        ExpressionAttributeValues: {
+            ':senderConnectionId': senderConnectionId
+        },
+        Limit: 1
+    }).promise()
+    return userInfo.Items[0]
+}
+
+async function saveMessageToChatLog(userInfo, message){
+    console.log('Logging message for user ', userInfo['userId'])
+    await docClient.put({
+        TableName: chatHistoryTable,
+        Item: {
+            userId: userInfo.userId,
+            userName: userInfo.userName,
+            timestamp: new Date().toISOString(),
+            message: message
+        }
+    }).promise()
 }
