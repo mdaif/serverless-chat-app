@@ -22,6 +22,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     const senderConnectionId = event.requestContext.connectionId
     const userInfo = await getUserInfo(senderConnectionId)
     const message = event.body
+    const timestamp = new Date().toISOString()
     console.log('Getting all connections for connection: ', senderConnectionId)
 
     const connections = await docClient.scan({
@@ -30,8 +31,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
     for (const connection of connections.Items) {
         const receiverConnectionId = connection.id
-        await sendMessageToClient(userInfo.userName, message, receiverConnectionId)
-        await saveMessageToChatLog(userInfo, message)
+        await sendMessageToClient(userInfo.userName, message, timestamp, receiverConnectionId)
+        await saveMessageToChatLog(userInfo, message, timestamp)
     }
     return {
         statusCode: 200,
@@ -39,11 +40,13 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     }
 }
 
-async function sendMessageToClient(userName: string, message: string, receiverConnectionId: string) {
+async function sendMessageToClient(userName: string, message: string, timestamp: string, receiverConnectionId: string) {
     try {
         console.log('Sending message to a connection', receiverConnectionId)
         const payload = {
-            'message': `${userName} says: ${message}`
+            'userName': userName,
+            'timestamp': timestamp,
+            'message': message
         }
         await apiGateway.postToConnection({
             ConnectionId: receiverConnectionId,
@@ -77,15 +80,15 @@ async function getUserInfo(senderConnectionId: string) {
     return userInfo.Items[0]
 }
 
-async function saveMessageToChatLog(userInfo, message){
+async function saveMessageToChatLog(userInfo, message, timestamp){
     console.log('Logging message for user ', userInfo['userId'])
     await docClient.put({
         TableName: chatHistoryTable,
         Item: {
             userId: userInfo.userId,
             userName: userInfo.userName,
-            timestamp: new Date().toISOString(),
-            message: message
+            timestamp,
+            message
         }
     }).promise()
 }
