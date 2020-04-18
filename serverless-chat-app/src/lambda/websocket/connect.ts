@@ -14,9 +14,19 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const connectionId = event.requestContext.connectionId
   let tokenPayload: JwtPayload
 
+  let authHeader: string
+  let delimiter: string
   try {
-    const authHeader = event.headers.Authorization
-    tokenPayload = await verifyToken(authHeader)
+    if (event.headers.hasOwnProperty('Sec-WebSocket-Protocol')) {
+      // JS WebSocket client doesn't allow custom authorization headers.
+      authHeader = event.headers['Sec-WebSocket-Protocol']
+      delimiter = ', '
+    } else {
+      authHeader = event.headers.Authorization
+      delimiter = ' '
+    }
+
+    tokenPayload = await verifyToken(authHeader, delimiter)
   } catch(err) {
     console.log('Could not authenticate request: ', err)
     return {

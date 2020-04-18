@@ -1,23 +1,100 @@
 <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 
-        <!-- font awesome from BootstrapCDN -->
-        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
-        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
-        <link href="/public/app.css" rel="stylesheet">
-    </head>
-    <body class="home">
-        <div class="container">
-            <div class="login-page clearfix">
-                <div class="logged-in-box auth0-box logged-in">
-                    <h1 id="logo"><img src="//cdn.auth0.com/samples/auth0_logo_final_blue_RGB.png" /></h1>
-                    <img class="avatar" src="{{userinfo['picture']}}"/>
-                    <h2>Welcome {{userinfo['name']}}</h2>
-                    <pre>{{userinfo_pretty}}</pre>
-                    <a id="qsLogoutBtn" class="btn btn-primary btn-lg btn-logout btn-block" href="/logout">Logout</a>
+    <link
+            type="text/css"
+            rel="stylesheet"
+            href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link
+            type="text/css"
+            rel="stylesheet"
+            href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
+    />
+    <!-- font awesome from BootstrapCDN -->
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/public/app.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="home">
+<div class="container">
+    <div class="login-page clearfix">
+        <div class="logged-in-box auth0-box logged-in">
+            <h1 id="logo">Serverless shoutbox</h1>
+            <img class="avatar" src="{{userinfo['picture']}}"/>
+            <h2>Welcome {{userinfo['name']}}</h2>
+            <pre>{{userinfo_pretty}}</pre>
+
+            <div id="app">
+                <!-- Don't use Jinja template here, only Vue.js' -->
+                {% raw %}
+                <div>
+                    <b-form-input v-model="message" placeholder="Enter your message" @keyup.enter.native="onSubmit">
+                    </b-form-input>
+
                 </div>
+                <div>
+                    <b-table striped hover :items="chatHistory"></b-table>
+                </div>
+
+                {% endraw %}
             </div>
+
+            <a id="qsLogoutBtn" class="btn btn-primary btn-lg btn-logout btn-block" href="/logout">Logout</a>
         </div>
-    </body>
+    </div>
+
+</div>
+</body>
+
+<!-- Load polyfills to support older browsers -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
+
+<!-- Required scripts -->
+<script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+<script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+
+<script>
+new Vue({
+  el: '#app',
+  data () {
+    return {
+      chatHistory: null,
+      message: null,
+      webSocketClient: null
+    }
+  },
+  methods: {
+    init() {
+        this.webSocketClient = new WebSocket('{{ aws_data.websocket_endpoint }}', ["BEARER", "{{ aws_data.id_token }}"])
+     axios
+      .get('{{ aws_data.chat_history_endpoint }}', {
+        headers: {
+          'Authorization': 'BEARER {{ aws_data.id_token }}'
+        }
+      })
+      .then(response => (this.chatHistory = response.data.items))
+
+    },
+    onSubmit() {
+      axios.post()
+      this.message = null
+    }
+  },
+  mounted () {
+this.init()
+
+  }
+})
+
+
+
+
+</script>
 </html>

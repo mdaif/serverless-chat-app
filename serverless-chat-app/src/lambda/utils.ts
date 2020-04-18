@@ -16,26 +16,26 @@ async function getCertificate(): Promise<string> {
     return cert
 }
 
-function getToken(authHeader: string): string {
-  const split = authHeader.split(' ')
+function getToken(authHeader: string, delimiter: string): string {
+  const split = authHeader.split(delimiter)
   const token = split[1]
-
+  console.log('token: ', token)
   return token
 }
 
-export async function verifyToken(authHeader: string): Promise<JwtPayload> {
+export async function verifyToken(authHeader: string, delimiter: string = ' '): Promise<JwtPayload> {
   if (!authHeader) {
     logger.error('No Authentication header')
     throw new Error('No authentication header')
   }
 
-  const correctHeader = authHeader.toLowerCase().startsWith('bearer ')
+  const correctHeader = authHeader.toLowerCase().startsWith('bearer' + delimiter)
   if (! correctHeader){
     logger.error('malformed header, %s', authHeader)
     throw new Error('Invalid authentication header')
   }
 
-  const token = getToken(authHeader)
+  const token = getToken(authHeader, delimiter)
   const cert = await getCertificate()
   return verify(token, cert, { algorithms: ['RS256'] }) as JwtPayload
 }

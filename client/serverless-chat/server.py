@@ -16,6 +16,7 @@ from authlib.integrations.flask_client import OAuth
 from six.moves.urllib.parse import urlencode
 
 import constants
+from constants import CHAT_HISTORY_ENDPOINT, WEBSOCKET_ENDPOINT
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -103,9 +104,17 @@ def logout():
 def dashboard():
     data = session[constants.JWT_PAYLOAD]
     data['id_token'] = session[constants.ID_TOKEN]
-    return render_template('dashboard.html',
-                           userinfo=session[constants.PROFILE_KEY],
-                           userinfo_pretty=json.dumps(data, indent=4))
+
+    aws_data = {
+        'id_token': session[constants.ID_TOKEN],
+        'chat_history_endpoint': CHAT_HISTORY_ENDPOINT,
+        'websocket_endpoint': WEBSOCKET_ENDPOINT
+    }
+
+    return render_template(
+        'dashboard.html', userinfo=session[constants.PROFILE_KEY], userinfo_pretty=json.dumps(data, indent=4),
+        aws_data=aws_data
+    )
 
 
 if __name__ == "__main__":
