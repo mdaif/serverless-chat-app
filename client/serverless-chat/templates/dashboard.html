@@ -67,7 +67,9 @@ new Vue({
     return {
       chatHistory: null,
       message: null,
-      webSocketClient: null
+      webSocketClient: null,
+      limit: 20,
+      nextKey: null
     }
   },
   methods: {
@@ -79,11 +81,20 @@ new Vue({
         }
      axios
       .get('{{ aws_data.chat_history_endpoint }}', {
+        params: {
+          limit: this.limit,
+          nextKey: this.nextKey
+        },
         headers: {
           'Authorization': 'BEARER {{ aws_data.id_token }}'
         }
       })
-      .then(response => (this.chatHistory = response.data.items))
+      .then(
+        (response) => {
+          this.chatHistory = response.data.chatHistory
+          this.nextKey = response.data.nextKey
+        }
+      )
 
     },
     onSubmit() {

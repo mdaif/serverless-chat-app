@@ -1,7 +1,7 @@
 import { createLogger } from '../utils/logger'
 import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-import { ChatLogEntry } from '../models/ChatLogEntry'
+import { ChatLogEntry, ChatLogResult } from '../models/ChatLogEntry'
 
 const AWSXRay = require('aws-xray-sdk')
 const XAWS = AWSXRay.captureAWS(AWS)
@@ -14,27 +14,29 @@ export class ChatHistoryAccess {
     private readonly docClient: DocumentClient = createDynamoDBClient()) {
   }
 
-  async getAllChatHistory(): Promise<ChatLogEntry[]> {
-    //TODO: should add pagination
+  async getAllChatHistory(limit, startKey): Promise<ChatLogResult> {
     logger.info('Getting all chat history entries')
 
     const result = await this.docClient.scan({
-      TableName: chatHistoryTable
+      TableName: chatHistoryTable,
+      Limit: limit,
+      ExclusiveStartKey: startKey
     }).promise()
 
-    const items = result.Items
-    return items as ChatLogEntry[]
+    const entries = result.Items as ChatLogEntry[]
+    const nextKey = result.LastEvaluatedKey
+    return { entries, nextKey } as ChatLogResult
   }
 }
 
 function createDynamoDBClient() {
-if (process.env.IS_OFFLINE) {
+  if (process.env.IS_OFFLINE) {
     console.log('Creating a local DynamoDB instance')
     return new XAWS.DynamoDB.DocumentClient({
-    region: 'localhost',
-    endpoint: 'http://localhost:8000'
+      region: 'localhost',
+      endpoint: 'http://localhost:8000'
     })
-}
+  }
 
-return new XAWS.DynamoDB.DocumentClient()
+  return new XAWS.DynamoDB.DocumentClient()
 }

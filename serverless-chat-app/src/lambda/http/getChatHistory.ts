@@ -9,7 +9,8 @@ const logger = createLogger('getAllChatLogs')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Processing event: ', event)
-    const allChatLogs = await getAllChatHistory()
+
+    const result = await getAllChatHistory(event)
 
     return {
         statusCode: 200,
@@ -18,7 +19,17 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             'Access-Control-Allow-Credentials': true
         },
         body: JSON.stringify({
-            items: allChatLogs
+            chatHistory: result.entries,
+            nextKey: encodeNextKey(result.nextKey)
         })
     }
 }
+
+function encodeNextKey(lastEvaluatedKey) {
+    if (!lastEvaluatedKey) {
+      return null
+    }
+  
+    return encodeURIComponent(JSON.stringify(lastEvaluatedKey))
+  }
+  
