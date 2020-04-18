@@ -18,17 +18,33 @@ provider:
     CHAT_HISTORY_TABLE: Chat-History-Table-${self:provider.stage}
 
 functions:
-    
+  AuthHandler:
+    handler: src/lambda/auth/auth0Authorizer.handler
+
+  ChatHistoryHandler:
+    handler: src/lambda/http/getChatHistory.handler
+    events:
+      - http:
+          method: get
+          path: chat-history
+          cors: true
+          authorizer: AuthHandler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CHAT_HISTORY_TABLE} 
+
   ConnectHandler:
-      handler: src/lambda/websocket/connect.handler
-      events:
-        - websocket:
-            route: $connect
-      iamRoleStatements:
-        - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-          Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
+    handler: src/lambda/websocket/connect.handler
+    events:
+      - websocket:
+          route: $connect
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
 
   DisconnectHandler:
     handler: src/lambda/websocket/disconnect.handler

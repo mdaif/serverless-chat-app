@@ -15,7 +15,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   let tokenPayload: JwtPayload
 
   try {
-    tokenPayload = await verifyToken(event)
+    const authHeader = event.headers.Authorization
+    tokenPayload = await verifyToken(authHeader)
   } catch(err) {
     console.log('Could not authenticate request: ', err)
     return {

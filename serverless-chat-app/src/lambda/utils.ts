@@ -1,4 +1,3 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
 import Axios from 'axios'
 import { verify } from 'jsonwebtoken'
 import { JwtPayload } from "../auth/JwtPayload";
@@ -24,8 +23,7 @@ function getToken(authHeader: string): string {
   return token
 }
 
-export async function verifyToken(event: APIGatewayProxyEvent): Promise<JwtPayload> {
-  const authHeader = event.headers.Authorization
+export async function verifyToken(authHeader: string): Promise<JwtPayload> {
   if (!authHeader) {
     logger.error('No Authentication header')
     throw new Error('No authentication header')
