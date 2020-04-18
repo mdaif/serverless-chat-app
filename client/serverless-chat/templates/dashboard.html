@@ -73,6 +73,10 @@ new Vue({
   methods: {
     init() {
         this.webSocketClient = new WebSocket('{{ aws_data.websocket_endpoint }}', ["BEARER", "{{ aws_data.id_token }}"])
+        this.webSocketClient.onmessage = (event) => {
+            const data = JSON.parse(event.data)
+            this.chatHistory.unshift(data)
+        }
      axios
       .get('{{ aws_data.chat_history_endpoint }}', {
         headers: {
@@ -83,15 +87,16 @@ new Vue({
 
     },
     onSubmit() {
-      axios.post()
+      this.webSocketClient.send(this.message)
       this.message = null
     }
   },
   mounted () {
-this.init()
+    this.init()
 
   }
 })
+
 
 
 
