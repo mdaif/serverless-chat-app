@@ -6,6 +6,7 @@ service: sls-shoutbox
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
+  - serverless-plugin-tracing
 
 provider:
   name: aws
@@ -16,11 +17,18 @@ provider:
   environment:
     CONNECTIONS_TABLE: Chat-WS-Connections-${self:provider.stage}
     CHAT_HISTORY_TABLE: Chat-History-Table-${self:provider.stage}
+  tracing: true
 
 functions:
   AuthHandler:
     handler: src/lambda/auth/auth0Authorizer.handler
-
+    iamRoleStatements:
+      - Effect: "Allow" # xray permissions (required)
+        Action:
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
   ChatHistoryHandler:
     handler: src/lambda/http/getChatHistory.handler
     events:
@@ -34,7 +42,12 @@ functions:
         Action:
           - dynamodb:Scan
         Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CHAT_HISTORY_TABLE} 
-
+      - Effect: "Allow" # xray permissions (required)
+        Action:
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
   ConnectHandler:
     handler: src/lambda/websocket/connect.handler
     events:
@@ -45,7 +58,12 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
-
+      - Effect: "Allow" # xray permissions (required)
+        Action:
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
   DisconnectHandler:
     handler: src/lambda/websocket/disconnect.handler
     events:
@@ -56,6 +74,12 @@ functions:
         Action:
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
+      - Effect: "Allow" # xray permissions (required)
+        Action:
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
   BroadcastHandler:
     environment:
       STAGE: ${self:provider.stage}
@@ -82,6 +106,12 @@ functions:
           - execute-api:Invoke
           - execute-api:ManageConnections
         Resource: arn:aws:execute-api:*:*:*
+      - Effect: "Allow" # xray permissions (required)
+        Action:
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
 resources:
   Resources:
     WebSocketConnectionsDynamoDBTable:
