@@ -62,16 +62,16 @@ But that requires docker to be installed, running as a non-sudo user and the env
 ## Working images
 1. Backend deployment
 
-![alt successfuldeployment](screenshots/successful-deployment.png")
+![alt text](https://github.com/mdaif/serverless-chat-app/blob/master/screenshots/successful-deployment.png "Successful deployment")
 
 2. Login
- ![alt login](screenshots/log-in.png")
+![alt text](https://github.com/mdaif/serverless-chat-app/blob/master/screenshots/log-in.png "Login")
 
 3.  Chat window
- ![alt chatwindow](screenshots/chat-window.png")
+![alt text](https://github.com/mdaif/serverless-chat-app/blob/master/screenshots/chat-window.png "Chat window")
 
-4. Two chat windows (with two authenticated users) 
-  ![alt workingshoutbox](screenshots/working-shoutbox.png")
+4. Two chat windows (with two authenticated users)
+![alt text](https://github.com/mdaif/serverless-chat-app/blob/master/screenshots/working-shoutbox.png "working shoutbox")
   
 ## Design notes
 - Request validation is done within the lambdas. Body validator didn't apply to my usecase.
@@ -89,7 +89,7 @@ or a relational database. If that's in place, I'd implement pagination.
 
 ## Tracing
 - Tracing is done via AWS' X-Ray
-  ![alt chatwindow](screenshots/xray.png")
+![alt text](https://github.com/mdaif/serverless-chat-app/blob/master/screenshots/xray.png "tracing")
 
 ## Future work
 - If the DB is switched to another one as mentioned in Design Notes section, I'd implement pagination.
