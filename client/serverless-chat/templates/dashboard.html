@@ -71,6 +71,9 @@ new Vue({
       fields: ['userName', 'timestamp', 'message']
     }
   },
+  created () {
+    window.addEventListener('beforeunload', this.closeWebsocket)
+  },
   methods: {
     init() {
         this.webSocketClient = new WebSocket('{{ aws_data.websocket_endpoint }}', ["BEARER", "{{ aws_data.id_token }}"])
@@ -99,12 +102,15 @@ new Vue({
     onSubmit() {
       this.webSocketClient.send(this.message)
       this.message = null
+    },
+    closeWebsocket() {
+        this.webSocketClient.close()
     }
   },
   mounted () {
     this.init()
+  },
 
-  }
 })
 
 
