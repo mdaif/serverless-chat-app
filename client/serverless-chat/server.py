@@ -104,7 +104,7 @@ def logout():
 def dashboard():
     data = session[constants.JWT_PAYLOAD]
     data['id_token'] = session[constants.ID_TOKEN]
-
+    print(data)
     aws_data = {
         'id_token': session[constants.ID_TOKEN],
         'chat_history_endpoint': CHAT_HISTORY_ENDPOINT,
@@ -112,8 +112,7 @@ def dashboard():
     }
 
     return render_template(
-        'dashboard.html', userinfo=session[constants.PROFILE_KEY], userinfo_pretty=json.dumps(data, indent=4),
-        aws_data=aws_data
+        'dashboard.html', userinfo=session[constants.PROFILE_KEY], aws_data=aws_data,
     )
 
 

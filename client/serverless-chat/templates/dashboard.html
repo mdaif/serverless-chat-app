@@ -26,11 +26,9 @@
 <div class="container">
     <div class="login-page clearfix">
         <div class="logged-in-box auth0-box logged-in">
-            <h1 id="logo">Serverless shoutbox</h1>
+            <h2 id="logo">Serverless shoutbox</h2>
             <img class="avatar" src="{{userinfo['picture']}}"/>
-            <h2>Welcome {{userinfo['name']}}</h2>
-            <pre>{{userinfo_pretty}}</pre>
-
+            <h1>Welcome {{userinfo['name']}}</h1>
             <div id="app">
                 <!-- Don't use Jinja template here, only Vue.js' -->
                 {% raw %}
@@ -40,7 +38,7 @@
 
                 </div>
                 <div>
-                    <b-table striped hover :items="chatHistory"></b-table>
+                    <b-table striped hover :items="chatHistory" :fields="fields"></b-table>
                 </div>
 
                 {% endraw %}
@@ -69,7 +67,8 @@ new Vue({
       message: null,
       webSocketClient: null,
       limit: 20,
-      nextKey: null
+      nextKey: null,
+      fields: ['userName', 'timestamp', 'message']
     }
   },
   methods: {

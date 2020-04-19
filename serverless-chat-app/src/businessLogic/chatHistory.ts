@@ -9,6 +9,11 @@ const DEFAULT_LIMIT = 30
 
 export async function getAllChatHistory(event: APIGatewayProxyEvent): Promise<ChatLogResult>{
     const limit = parseLimitParameter(event) || DEFAULT_LIMIT
+
+    // start key shouldn't will be ignored in this codebase. 
+    // DynamoDB doesn't support a query without a partition key, which means I cannot retrieve
+    // all chat logs since epoch, cannot sort them and limit them the way I can do with
+    // a relational DB. Future work: get rid of DyanmoDB and use a relational one.
     const startKey = parseNextKeyParameter(event)
 
     const result = await chatHistoryAccess.getAllChatHistory(limit, startKey)

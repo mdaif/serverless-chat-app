@@ -16,14 +16,24 @@ export class ChatHistoryAccess {
 
   async getAllChatHistory(limit, startKey): Promise<ChatLogResult> {
     logger.info('Getting all chat history entries')
+    logger.info('Ignoring key: %s', startKey)
 
     const result = await this.docClient.scan({
       TableName: chatHistoryTable,
-      Limit: limit,
-      ExclusiveStartKey: startKey
     }).promise()
 
-    const entries = result.Items as ChatLogEntry[]
+    const items = result.Items
+    // Always take the last N items where N = limit
+    const limitedItems = items.slice(items.length - limit, items.length)
+    // sort them based on timestamp
+    const sortedItems = limitedItems.sort((item1, item2) => {
+      if (item1.timestamp > item2.timestamp) return 1
+      else if (item1.timestamp < item2.timestamp) return -1
+      else return 0
+    })
+    // return items in a reverse chronological order
+    const reversedItems = sortedItems.reverse()
+    const entries = reversedItems as ChatLogEntry[]
     const nextKey = result.LastEvaluatedKey
     return { entries, nextKey } as ChatLogResult
   }
