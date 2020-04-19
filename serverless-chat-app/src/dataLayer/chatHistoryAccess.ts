@@ -1,11 +1,10 @@
 import { createLogger } from '../utils/logger'
-import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-import { ChatLogEntry, ChatLogResult } from '../models/ChatLogEntry'
+import { ChatLogEntry, ChatLogResult, ConnectionEntry } from '../models/ChatLogEntry'
+import { createDynamoDBClient } from './common'
 
-const AWSXRay = require('aws-xray-sdk')
-const XAWS = AWSXRay.captureAWS(AWS)
-const logger = createLogger('logsAccess')
+
+const logger = createLogger(__filename)
 const chatHistoryTable = process.env.CHAT_HISTORY_TABLE
 
 export class ChatHistoryAccess {
@@ -37,16 +36,17 @@ export class ChatHistoryAccess {
     const nextKey = result.LastEvaluatedKey
     return { entries, nextKey } as ChatLogResult
   }
-}
 
-function createDynamoDBClient() {
-  if (process.env.IS_OFFLINE) {
-    console.log('Creating a local DynamoDB instance')
-    return new XAWS.DynamoDB.DocumentClient({
-      region: 'localhost',
-      endpoint: 'http://localhost:8000'
-    })
+  async createChatLogEntry(userInfo: ConnectionEntry, message: string, timestamp: string) {
+    await this.docClient.put({
+      TableName: chatHistoryTable,
+      Item: {
+          userId: userInfo.userId,
+          userName: userInfo.userName,
+          timestamp,
+          message
+      }
+  }).promise()
   }
-
-  return new XAWS.DynamoDB.DocumentClient()
 }
+

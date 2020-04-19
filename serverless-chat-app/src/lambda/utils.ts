@@ -2,7 +2,7 @@ import Axios from 'axios'
 import { verify } from 'jsonwebtoken'
 import { JwtPayload } from "../auth/JwtPayload";
 import { createLogger } from "../utils/logger";
-const logger = createLogger('utils')
+const logger = createLogger(__filename)
 
 const jwksUrl = 'https://daif.eu.auth0.com/.well-known/jwks.json'
 

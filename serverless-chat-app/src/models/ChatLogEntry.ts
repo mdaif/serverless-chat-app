@@ -12,3 +12,10 @@ export interface ChatLogResult {
     entries: ChatLogEntry[]
     nextKey: DocumentClient.Key
 }
+
+export interface ConnectionEntry {
+    id: string,
+    userId: string,
+    userName: string,
+    timestamp: string,
+}

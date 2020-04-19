@@ -1,21 +1,19 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
-import * as AWS  from 'aws-sdk'
 import { verifyToken } from '../utils'
 import { JwtPayload } from '../../auth/JwtPayload'
+import { setupSession } from '../../businessLogic/webSockets'
+import { createLogger } from '../../utils/logger'
 
-const docClient = new AWS.DynamoDB.DocumentClient()
-
-const connectionsTable = process.env.CONNECTIONS_TABLE
+const logger = createLogger(__filename)
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Websocket connect', event)
+  logger.info('Websocket connect event: %s', event)
 
-  const connectionId = event.requestContext.connectionId
   let tokenPayload: JwtPayload
-
   let authHeader: string
   let delimiter: string
+
   try {
     if (event.headers.hasOwnProperty('Sec-WebSocket-Protocol')) {
       // JS WebSocket client doesn't allow custom authorization headers.
@@ -27,8 +25,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     }
 
     tokenPayload = await verifyToken(authHeader, delimiter)
-  } catch(err) {
-    console.log('Could not authenticate request: ', err)
+  } catch (err) {
+    console.error('Could not authenticate request: %s', err)
     return {
       statusCode: 401,
       headers: {
@@ -40,24 +38,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       })
     }
   }
-  const userId = tokenPayload.sub
-  
-  console.log('connection from userId: ', userId)
-  const timestamp = new Date().toISOString()
 
-  const item = {
-    id: connectionId,
-    userId: tokenPayload.sub,
-    userName: tokenPayload.name,
-    timestamp,
-  }
-
-  console.log('Storing item: ', item)
-
-  await docClient.put({
-    TableName: connectionsTable,
-    Item: item
-  }).promise()
+  await setupSession(event, tokenPayload)
 
   return {
     statusCode: 200,

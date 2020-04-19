@@ -1,8 +1,9 @@
 import { ChatHistoryAccess } from "../dataLayer/chatHistoryAccess";
 import { ChatLogResult } from "../models/ChatLogEntry";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { createLogger } from "../utils/logger";
 
-
+const logger = createLogger(__filename)
 const chatHistoryAccess = new ChatHistoryAccess()
 const DEFAULT_LIMIT = 30
 
@@ -15,9 +16,15 @@ export async function getAllChatHistory(event: APIGatewayProxyEvent): Promise<Ch
     // all chat logs since epoch, cannot sort them and limit them the way I can do with
     // a relational DB. Future work: get rid of DyanmoDB and use a relational one.
     const startKey = parseNextKeyParameter(event)
-
+    logger.info('Getting All chat history with limit: %s and start key: %s', limit, startKey)
     const result = await chatHistoryAccess.getAllChatHistory(limit, startKey)
     return result
+}
+
+export async function saveMessageToChatLog(userInfo, message, timestamp){
+    console.log('Logging message for user ', userInfo['userId'])
+    await chatHistoryAccess.createChatLogEntry(userInfo, message, timestamp)
+    
 }
 
 function parseNextKeyParameter(event: APIGatewayProxyEvent) {

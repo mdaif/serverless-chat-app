@@ -4,13 +4,13 @@ import 'source-map-support/register'
 import { createLogger } from '../../utils/logger'
 import { verifyToken } from '../utils'
 
-const logger = createLogger('auth.auth0Authorizer')
+const logger = createLogger(__filename)
 
 
 export const handler = async (
   event: CustomAuthorizerEvent
 ): Promise<CustomAuthorizerResult> => {
-  logger.info('Authorizing a user, auth header: %s', event.authorizationToken)
+
   try {
     const jwtToken = await verifyToken(event.authorizationToken)
     logger.info('User was authorized', jwtToken)
